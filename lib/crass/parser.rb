@@ -114,6 +114,36 @@ module Crass
       string
     end
 
+    # Converts a node or array of nodes from an inline style attribute into a
+    # CSS string based on their original tokenized input.
+    #
+    # Options:
+    #
+    #   * **:exclude_comments** - When `true`, comments will be excluded.
+    #
+    def self.stringify_inline(nodes, options = {})
+      string = String.new
+      last = {}
+
+      nodes.each do |node|
+        next if node.nil?
+
+        if node[:node] == :comment
+          string << node[:raw] unless options[:exclude_comments]
+        elsif node[:node] == :whitespace
+          # No consecutive whitespace or whitespace after property names
+          string << ' ' unless string.end_with?(' ') || last[:node] == :ident
+        elsif node.key?(:raw)
+          string << node[:raw]
+        elsif node.key?(:tokens)
+          string << stringify_inline(node[:tokens], options)
+        end
+
+        last = node
+      end
+
+      string.strip
+    end
     # -- Instance Methods ------------------------------------------------------
 
     # {TokenScanner} wrapping the tokens generated from this parser's input.

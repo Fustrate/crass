@@ -68,4 +68,52 @@ describe 'Serialization' do
     tree = Crass.parse(css)
     assert_equal(css, Crass::Parser.stringify(tree))
   end
+
+  describe '#stringify_inline' do
+    it 'should trim whitespace around an inline style' do
+      tree = Crass.parse_properties('  width: 10px;  ')
+      assert_equal('width: 10px;', CP.stringify_inline(tree))
+    end
+
+    it 'should collapse whitespace between properties' do
+      tree = Crass.parse_properties('width: 10px;    height: 10px;')
+      assert_equal('width: 10px; height: 10px;', CP.stringify_inline(tree))
+    end
+
+    it 'should collapse whitespace between a property and its value' do
+      tree = Crass.parse_properties('width:     10px;')
+      assert_equal('width: 10px;', CP.stringify_inline(tree))
+    end
+
+    it 'should remove whitespace before a semicolon' do
+      tree = Crass.parse_properties('width: 10px ;')
+      assert_equal('width: 10px;', CP.stringify_inline(tree))
+    end
+
+    it 'should remove whitespace before a colon' do
+      tree = Crass.parse_properties('width : 10px;')
+      assert_equal('width: 10px;', CP.stringify_inline(tree))
+    end
+
+    it 'should leave comments alone' do
+      tree = Crass.parse_properties(
+        'width: 10px; /* comment */',
+        :preserve_comments => true
+      )
+
+      assert_equal('width: 10px; /* comment */', CP.stringify_inline(tree))
+    end
+
+    it 'should leave comments between properties alone' do
+      tree = Crass.parse_properties(
+        'width: 10px; /* comment */ height: 10px;',
+        :preserve_comments => true
+      )
+
+      assert_equal(
+        'width: 10px; /* comment */ height: 10px;',
+        CP.stringify_inline(tree)
+      )
+    end
+  end
 end
