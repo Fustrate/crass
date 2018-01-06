@@ -1,6 +1,7 @@
 # encoding: utf-8
 require_relative 'token-scanner'
 require_relative 'tokenizer'
+require_relative 'formatters'
 
 module Crass
 
@@ -72,46 +73,7 @@ module Crass
     #   * **:exclude_comments** - When `true`, comments will be excluded.
     #
     def self.stringify(nodes, options = {})
-      nodes  = [nodes] unless nodes.is_a?(Array)
-      string = String.new
-
-      nodes.each do |node|
-        next if node.nil?
-
-        case node[:node]
-        when :at_rule
-          string << '@'
-          string << node[:name]
-          string << self.stringify(node[:prelude], options)
-
-          if node[:block]
-            string << '{' << self.stringify(node[:block], options) << '}'
-          else
-            string << ';'
-          end
-
-        when :comment
-          string << node[:raw] unless options[:exclude_comments]
-
-        when :simple_block
-          string << node[:start]
-          string << self.stringify(node[:value], options)
-          string << node[:end]
-
-        when :style_rule
-          string << self.stringify(node[:selector][:tokens], options)
-          string << '{' << self.stringify(node[:children], options) << '}'
-
-        else
-          if node.key?(:raw)
-            string << node[:raw]
-          elsif node.key?(:tokens)
-            string << self.stringify(node[:tokens], options)
-          end
-        end
-      end
-
-      string
+      Crass::Formatters::Default.new(options).call(nodes)
     end
 
     # -- Instance Methods ------------------------------------------------------

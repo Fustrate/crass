@@ -1,7 +1,8 @@
 # encoding: utf-8
+
 require_relative 'support/common'
 
-describe 'Serialization' do
+describe 'Crass::Formatters::Default' do
   make_my_diffs_pretty!
   parallelize_me!
 
@@ -11,23 +12,25 @@ describe 'Serialization' do
     it "should parse and serialize #{filepath}" do
       input = File.read(filepath)
 
-      tree = Crass.parse(input,
-        :preserve_comments => true,
-        :preserve_hacks => true)
+      tree = Crass.parse(
+        input,
+        preserve_comments: true,
+        preserve_hacks: true
+      )
 
-      assert_equal(input, CP.stringify(tree))
+      assert_equal input, CFD.new(preserve_comments: true).call(tree)
     end
   end
 
   # -- Regression tests --------------------------------------------------------
-  it "should not omit a trailing semicolon when serializing a `@charset` rule" do
+  it 'should not omit a trailing semicolon when serializing a `@charset` rule' do
     css  = '@charset "utf-8";'
     tree = Crass.parse(css)
 
-    assert_equal(css, CP.stringify(tree))
+    assert_equal css, CFD.new.call(tree)
   end
 
-  it "should reflect modifications made to the block of an `:at_rule`" do
+  it 'should reflect modifications made to the block of an `:at_rule`' do
     tree = Crass.parse(%[
       @media (screen) {
         .froggy { color: green; }
@@ -35,15 +38,15 @@ describe 'Serialization' do
       }
     ].strip)
 
-    tree[0][:block] = Crass::Parser.parse_rules(".piggy { color: pink; }")
+    tree[0][:block] = Crass::Parser.parse_rules('.piggy { color: pink; }')
 
     assert_equal(
-      "@media (screen) {.piggy { color: pink; }}",
-      Crass::Parser.stringify(tree)
+      '@media (screen) {.piggy { color: pink; }}',
+      CFD.new.call(tree)
     )
   end
 
-  it "should serialize a @page rule" do
+  it 'should serialize a @page rule' do
     css = %[
       @page { margin: 2cm }
 
@@ -65,7 +68,6 @@ describe 'Serialization' do
       }
     ].strip
 
-    tree = Crass.parse(css)
-    assert_equal(css, Crass::Parser.stringify(tree))
+    assert_equal css, CFD.new.call(Crass.parse(css))
   end
 end

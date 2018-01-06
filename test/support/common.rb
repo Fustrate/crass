@@ -6,6 +6,7 @@ require_relative '../../lib/crass'
 
 CP = Crass::Parser
 CT = Crass::Tokenizer
+CFD = Crass::Formatters::Default
 
 # Hack shared test support into MiniTest.
 MiniTest::Spec.class_eval do
